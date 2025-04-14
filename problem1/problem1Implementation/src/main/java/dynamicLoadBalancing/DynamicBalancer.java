@@ -1,45 +1,60 @@
 package dynamicLoadBalancing;
 
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class DynamicBalancer {
-    // Atomic variables are thread-safe without synchronized blocks
-    // this will avoid race and errors
-    public AtomicInteger nextTaskStart = new AtomicInteger(0);
-    public AtomicInteger primeCount = new AtomicInteger(0);
-    private int numEnd;
-    private int taskSize;
+    public static void run(int NUM_THREADS, int NUM_END) throws InterruptedException {
+        int TASK_SIZE = 10;
 
-    public DynamicBalancer(int numEnd, int taskSize) {
-        this.numEnd = numEnd;
-        this.taskSize = taskSize;
-    }
+        AtomicInteger nextTaskStart = new AtomicInteger(0);
+        AtomicInteger primeCount = new AtomicInteger(0);
 
-    // this function will be used by each thread
-    public void processChunk() {
-        int localCount = 0; // how many primes it found by itself.
+        Thread[] threads = new Thread[NUM_THREADS];
+        long programStart = System.currentTimeMillis();
 
-        // Keep grabbing chunks until we hit the limit
-        while (true) {
-            int start = nextTaskStart.getAndAdd(taskSize); // safely get next chunk
-            if (start >= numEnd) break;
+        for (int i = 0; i < NUM_THREADS; i++) {
+            final int threadIndex = i;
 
-            for (int j = start; j < start + taskSize && j < numEnd; j++) {
-                if (isPrime(j)) localCount++;
-            }
+            threads[i] = new Thread(() -> {
+                long threadStart = System.currentTimeMillis();
+                int localCount = 0;
+
+                while (true) {
+                    int start = nextTaskStart.getAndAdd(TASK_SIZE);
+                    if (start >= NUM_END) break;
+
+                    for (int j = start; j < start + TASK_SIZE && j < NUM_END; j++) {
+                        if (isPrime(j)) localCount++;
+                    }
+                }
+
+                primeCount.addAndGet(localCount);
+                long threadEnd = System.currentTimeMillis();
+         //       System.out.println("Thread " + threadIndex + " took " + (threadEnd - threadStart) + "ms");
+            });
+
+            threads[i].start();
         }
 
-        // Add local count to shared total safely
-        primeCount.addAndGet(localCount);
+        for (Thread t : threads) t.join();
+
+        long programEnd = System.currentTimeMillis();
+        long totalTime = programEnd - programStart;
+
+        System.out.println("Total time: \u001B[32m" + totalTime + "\u001B[0m ms  using dynamic load balancing");
+     //   System.out.println("Performance: " + (1000.0 / totalTime) + "   using dynamic load balancing");
+     //   System.out.println("Total prime numbers: " + primeCount.get() + "   using dynamic load balancing");
     }
 
-    // check if the number is Prime
+    // The classic "is it prime?" function.
     static boolean isPrime(int num) {
-        if (num <= 1) return false; //theres no primeNumb less than 1
-        for (int i = 2; i <= Math.sqrt(num); i++) {
+        int i;
+        if (num <= 1) return false;
+
+        for (i = 2; i < num; i++) {
             if (num % i == 0) return false;
         }
+
         return true;
     }
 }
