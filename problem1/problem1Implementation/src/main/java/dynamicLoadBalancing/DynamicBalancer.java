@@ -30,7 +30,7 @@ public class DynamicBalancer {
 
                 primeCount.addAndGet(localCount);
                 long threadEnd = System.currentTimeMillis();
-         //       System.out.println("Thread " + threadIndex + " took " + (threadEnd - threadStart) + "ms");
+            // System.out.println("Thread " + threadIndex + " took " + (threadEnd - threadStart) + "ms");
             });
 
             threads[i].start();

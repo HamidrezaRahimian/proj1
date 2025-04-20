@@ -15,30 +15,31 @@ public class BlockBalancer {
             final int threadIndex = i;
 
             threads[i] = new Thread(() -> {
-                long threadStart = System.currentTimeMillis(); // stopwatch per thread
+                long threadStart = System.currentTimeMillis();
                 int local = 0;
 
-                // This is where the "block" idea kicks in. Each thread takes a big fat chunk.
                 int blockSize = NUM_END / NUM_THREADS;
                 int start = threadIndex * blockSize;
+                if (start < 2) start = 2;
                 int end = (threadIndex == NUM_THREADS - 1) ? NUM_END : start + blockSize;
 
-                // Now let's go through the assigned block and count some primes like math detectives 🕵️‍♂️
                 for (int j = start; j < end; j++) {
                     if (isPrime(j)) local++;
                 }
 
                 localCounts[threadIndex] = local;
-
                 long threadEnd = System.currentTimeMillis();
-           //    System.out.println("Thread " + threadIndex + " took " + (threadEnd - threadStart) + "ms");
+              //  System.out.println("Thread " + threadIndex + " took " + (threadEnd - threadStart) + "ms");
             });
 
-            threads[i].start(); // go go go little thread!
+            threads[i].start();
+        //  System.out.println("Thread " + i + " started");
+            // go go go little thread!
         }
 
         // Wait for all threads to finish their prime-counting business
         for (Thread t : threads) t.join();
+      //  System.out.println("Threads stopped");
 
         // Gather all the local prime counts from each thread
         for (int count : localCounts) {
@@ -50,8 +51,8 @@ public class BlockBalancer {
 
         // Print the juicy results 🧃
         System.out.println("Total time: \u001B[31m" + totalTime + "\u001B[0m ms  using static block load balancing");
-    //    System.out.println("Performance: " + (1000.0 / totalTime) + "   using static block load balancing");
-   //     System.out.println("Total prime numbers: " + primeCount + "   using static block load balancing");
+      //  System.out.println("Performance: " + (1000.0 / totalTime) + "   using static block load balancing");
+      // System.out.println("Total prime numbers: " + primeCount + "   using static block load balancing");
     }
 
     // The classic "is it prime?" function.
